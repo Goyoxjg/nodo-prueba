@@ -28,9 +28,7 @@
                    v-bind:current-page="currentPage"
                    v-bind:per-page="perPage"
                    :filter="filter"
-                   @filtered="onFiltered"
-
-          >
+                   @filtered="onFiltered">
 
             <template slot="id" slot-scope="data" sortable="false">
               <b-button @click="goToDetail(data.item.id)" variant="outline-primary">Ver detalle</b-button>

@@ -104,7 +104,7 @@
           if(typeof character.imageLink !== "undefined")
             pathImg = 'https://api.got.show' + character.imageLink ;
         }
-console.log(pathImg);
+
         return pathImg;
       }
     }
