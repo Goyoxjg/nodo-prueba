@@ -12,7 +12,17 @@ const gotService = {
  */
 export function listsAllCharacters () {
   return mainService.get('/characters').then((res) => {
-    return res.data
+    let result = [];
+
+    res.data.map( (row) => {
+      result.push({
+        name : row.name,
+        house : row.house,
+        id : row._id
+      });
+    });
+
+    return result;
   }).catch((error) => {
     console.error(error)
     return { error: error }
@@ -27,6 +37,12 @@ export function listsAllCharacters () {
  */
 export function getACharacter (id) {
   // CODE HERE
+  return mainService.get(`/characters/byId/${id}`).then((res) => {
+    return res.data
+  }).catch((error) => {
+    console.error(error)
+    return { error: error }
+  })
 }
 
 export default gotService
