@@ -68,6 +68,45 @@ const winsByTeams = [
     - Su prueba debe ejecutarse sin errores con: node logic-test.js
 */
 
+function getLeagueByWins( nameLeague){
+  const LeagueByWins = leagues.map( ( row ) => {
+    if(row.name === nameLeague)
+    {
+      let teamsFromLeague = [];
+      teamsByLeague.map( ( r ) => {
+        if(row.id === r.leagueId)
+          winsByTeams.map( ( wbt ) => {
+            if(wbt.teamId === r.teamId)
+            {
+              teamsFromLeague.push(wbt);
+            }
+
+          })
+      });
+
+      row.teams = teamsFromLeague.sort( ( prev , next ) => {
+        return prev.wins - next.wins;
+      });
+
+      return row;
+    }
+  });
+
+  return LeagueByWins.filter( (row) => {
+    return (typeof row !== "undefined");
+  })[0];
+};
+
+async function getTeams(){
+  return new Promise((resolve, reject) => {
+    const result = listTeamsByCountry().map( ( row ) => {
+      return row.name.toUpperCase();
+    });
+
+    resolve(result);
+  });
+}
+
 // 0 Arreglo con los ids de los equipos (función de ejemplo)
 function listTeamsIds () {
   return teams.map((client) => client.id)
@@ -76,36 +115,120 @@ function listTeamsIds () {
 // 1 Arreglo con los nombres de los equipos y el país al que pertenecen, ordenados alfabéticamente por el nombre de su país de origen.
 function listTeamsByCountry () {
   // CODE HERE
+  return teams.sort( (prev , next) => {
+    const prevLower = prev.country.toLowerCase();
+    const nextLower = next.country.toLowerCase();
+
+    if(prevLower < nextLower)
+      return -1;
+
+    if(prevLower > nextLower)
+      return 1;
+  });
 }
 
 // 2 Arreglo con los nombres de los equipos ordenados de mayor a menor por la cantidad de victorias en champions league.
 function sortTeamsByWins () {
   // CODE HERE
+  const teamsWithWins = teams.map( ( row ) => {
+    winsByTeams.map( ( r ) => {
+      if(row.id === r.teamId)
+          row.wins = r.wins
+    })
+
+    return row;
+  });
+
+  return teamsWithWins.sort( ( prev , next ) => {
+    return next.wins - prev.wins;
+  });
 }
 
 // 3 Arreglo de objetos en donde se muestre el nombre de las ligas y la sumatoria de las victorias de los equipos que pertenecen a ellas.
 function leaguesWithWins () {
   // CODE HERE
+  return leagues.map( ( row ) => {
+    row.teams = [];
+    teamsByLeague.map( ( r ) => {
+      if(row.id === r.leagueId)
+        row.teams.push(r.teamId);
+    });
+
+    row.wins = 0;
+    winsByTeams.map( ( e ) => {
+      if(row.teams.indexOf(e.teamId) > -1)
+        row.wins = (row.wins + e.wins);
+    })
+
+    return { league : row.name , totalWins : row.wins };
+  });
 }
 
 // 4 Objeto en que las claves sean los nombres de las ligas y los valores el nombre del equipo con la menor cantidad de victorias en champions.
 function leaguesWithTeamWithLestWins () {
   // CODE HERE
+  let result = {};
+  leagues.map( ( row ) => {
+    const teams = getLeagueByWins(row.name).teams;
+    const lessWins = teams[0].wins;
+    result[row.name] = lessWins;
+  });
+
+  return result;
 }
 
 // 5 Objeto en que las claves sean los nombres de las ligas y los valores el nombre del equipo con la mayor cantidad de victorias en champions.
 function leaguesWithTeamWithMostWins () {
   // CODE HERE
+  let result = {};
+  leagues.map( ( row ) => {
+    const teams = getLeagueByWins(row.name).teams;
+    const mostWins = teams[ ( teams.length - 1 ) ].wins;
+    result[row.name] = mostWins;
+  });
+
+  return result;
 }
 
 // 6 Arreglo con los nombres de las ligas ordenadas de mayor a menor por la cantidad de victorias de sus equipos.
 function sortLeaguesByTeamsByWins () {
   // CODE HERE
+  let result = [];
+  let leaguesOrderByMostWins = leaguesWithWins();
+  leaguesOrderByMostWins.sort( ( prev , next ) => {
+    return next.totalWins - prev.totalWins;
+  });
+  leaguesOrderByMostWins.map( ( row ) => {
+    result.push(row.league);
+  });
+
+  return result;
 }
 
 // 7 Arreglo con los nombres de las ligas ordenadas de mayor a menor por la cantidad de equipos que participan en ellas.
 function sortLeaguesByTeams () {
   // CODE HERE
+  const leaguesWithCountTeams = leagues.map( ( row ) => {
+    let teamsInLeague = [];
+    teamsByLeague.map( ( tbl ) => {
+      if(row.id === tbl.leagueId)
+        teamsInLeague.push(tbl.teamId);
+    });
+    row.totalTeams = teamsInLeague.length;
+
+    return row;
+  });
+
+  leaguesWithCountTeams.sort( ( prev , next ) => {
+    return next.totalTeams - prev.totalTeams;
+  });
+
+  let result = [];
+  leaguesWithCountTeams.map( ( row ) => {
+    result.push(row.name)
+  });
+
+  return result;
 }
 
 // 8 Agregar un nuevo equipo con datos ficticios a "teams", asociarlo a la liga de Francia y agregar un total de 4 victorias en champions.
@@ -113,6 +236,20 @@ function sortLeaguesByTeams () {
 // No modificar arreglos originales para no alterar las respuestas anteriores al correr la solución
 function newTeamRanking () {
   // CODE HERE
+  const newIdTeam = ( teams.length + 1 );
+  const newTeam = { id: newIdTeam , country: 'Chile', name: 'NodeJs C.F.' };
+  const newTeamsByLeague = { teamId: newIdTeam , leagueId: 7 }
+  const newWinsByTeams = { teamId: newIdTeam, wins: 4 }
+
+  teams.push(newTeam);
+  teamsByLeague.push(newTeamsByLeague);
+  winsByTeams.push(newWinsByTeams);
+
+  return sortTeamsByWins().map( ( row ) => {
+    return row.name;
+  }).indexOf('NodeJs C.F.');
+
+
 }
 
 // 9 Realice una función que retorne una promesa con los nombres de los equipos en upper case.
@@ -121,9 +258,9 @@ function newTeamRanking () {
 // console.log. Utilice async await para la llamada asíncrona a la función.
 // NOTA: solo debe crear la función asíncrona y agregar la llamada en la siguiente función.
 async function getTeamsNamesAsUpperCase () {
-  let response
+  let response;
   // ------MAKE AWAIT CALL HERE------
-
+  response = await getTeams();
   // --------------------------------
   console.log('response:')
   console.log(response)
